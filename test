@@ -1,0 +1,7 @@
+#!/bin/bash
+NAME=bob
+NOTFOUND=hello
+export NAME NOTFOUND
+
+envsubst '$NAME $NOTFOUND' < ~/bin/varfiles/newsite-default.txt > test.txt
+cat test.txt

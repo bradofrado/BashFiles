@@ -1,0 +1,4 @@
+pull:
+	git pull;
+	cp -r * /var/www/$NAME;
+

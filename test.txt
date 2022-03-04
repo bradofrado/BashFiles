@@ -1,0 +1,10 @@
+server {
+  listen 80;
+  server_name bob;
+  root /var/www/bob;
+  index index.html;
+  default_type "text/html";
+  location / {
+    try_files $uri $uri/ hello;
+  }
+}

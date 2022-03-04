@@ -1,0 +1,68 @@
+#!/bin/bash
+
+#functions
+promptYesNo () {
+	while true; do
+		echo -n "$1 "
+		read answer
+		case $answer in
+			[Yn]* ) return 1;;
+			[Nn]* ) return 0;;
+			* ) echo "Please enter either y or n";;
+		esac
+	done
+}
+
+createFromTemplate () {
+	envsubst "$@" < varfiles
+}
+
+read -p "Enter the name of the new site: " NAME
+
+FILE="/etc/nginx/sites-available/$NAME"
+
+if [ -f $FILE ]; then
+	echo "This server block already exists"
+	exit
+fi
+
+promptYesNo "Is this a single page application? [y/n]: "
+
+singlepage=$?
+
+if [ $singlepage -eq 1 ]; then
+	NOTFOUND="/index.html"
+else
+	NOTFOUND="=404"
+fi
+
+echo "Creating site..."
+export NAME 
+export NOTFOUND
+
+envsubst '$NAME $NOTFOUND' < ~/bin/varfiles/newsite-default.txt | sudo tee $FILE > /dev/null
+
+sudo ln -s $FILE /etc/nginx/sites-enabled/
+sudo mkdir /var/www/$NAME
+sudo chown $USER /var/www/$NAME
+
+read -p "Enter git hub repo--git@github.com:$USER/[ENTERHERE].git [press enter to skip]" repo
+
+if [ -z $repo ]; then
+	sudo cp ~/bin/varfiles/newsite-index.html /var/www/$NAME
+else
+	source="~/repos/$repo"
+	git clone git@github.com:$USER/$repo.git $source
+	envsubst '$NAME' < ~/bin/varfiles/newsite-makefile$singlepage.txt | sudo tee $source/makefile > /dev/null
+	sudo echo "makefile" > $source/.gitignore
+	make pull -C $source
+fi
+
+
+promptYesNo "Do you want to restart the server? [y/n]: "
+
+if [ $? -eq 1 ]; then
+	sudo service nginx reload
+fi
+
+echo "Site $NAME created!"
