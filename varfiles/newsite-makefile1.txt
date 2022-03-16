@@ -1,4 +1,5 @@
 pull:
 	git pull;
-	cp -r * /var/www/$NAME;
+	npm run build;
+	sudo cp -rp dist/* /var/www/$NAME;
 

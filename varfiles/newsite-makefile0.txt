@@ -1,4 +1,7 @@
 pull:
 	git pull;
 	cp -r * /var/www/$NAME;
-
+pull-vue:
+	git pull;
+	npm run build;
+	cp -r /dist /var/www/$NAME;

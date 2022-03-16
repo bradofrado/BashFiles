@@ -6,7 +6,7 @@ promptYesNo () {
 		echo -n "$1 "
 		read answer
 		case $answer in
-			[Yn]* ) return 1;;
+			[Yy]* ) return 1;;
 			[Nn]* ) return 0;;
 			* ) echo "Please enter either y or n";;
 		esac
@@ -27,11 +27,12 @@ if [ -f $FILE ]; then
 fi
 
 promptYesNo "Is this a single page application? [y/n]: "
-
 singlepage=$?
 
-if [ $singlepage -eq 1 ]; then
-	NOTFOUND="/index.html"
+if [ $singlepage -eq 1 ]; then 
+	NOTFOUND="/index.html" 
+	promptYesNo "Is this a vue application? [y/n]: "
+	vue=$?
 else
 	NOTFOUND="=404"
 fi
@@ -49,13 +50,28 @@ sudo chown $USER /var/www/$NAME
 read -p "Enter git hub repo--git@github.com:$USER/[ENTERHERE].git [press enter to skip]" repo
 
 if [ -z $repo ]; then
-	sudo cp ~/bin/varfiles/newsite-index.html /var/www/$NAME
+	sudo cp ~/bin/varfiles/newsite-index.html /var/www/$NAME/index.html
 else
-	source="~/repos/$repo"
-	git clone git@github.com:$USER/$repo.git $source
-	envsubst '$NAME' < ~/bin/varfiles/newsite-makefile$singlepage.txt | sudo tee $source/makefile > /dev/null
+	read -p "Enter branch (press enter for default): " branch
+	
+	#if they did not enter the branch, clone without it
+	if [ -z $branch ]; then
+		source=~/repos/$repo
+		mkdir $source
+		git clone git@github.com:$USER/$repo.git $source
+	else
+		source=~/repos/$repo-$branch
+		mkdir $source
+		git clone -b $branch git@github.com:$USER/$repo.git $source
+	fi
+	envsubst '$NAME' < ~/bin/varfiles/newsite-makefile.txt | sudo tee $source/makefile > /dev/null
 	sudo echo "makefile" > $source/.gitignore
-	make pull -C $source
+	
+	if [ $vue -eq 1 ]; then
+		make pull-vue -C $source
+	else
+		make pull -C $source
+	fi
 fi
 
 
