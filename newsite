@@ -37,20 +37,38 @@ else
 	NOTFOUND="=404"
 fi
 
+read -p "Which port will this run on? " PORT
+
+if [ -z $PORT ]; then 
+	TEMPLATE=newsite-default.txt
+else
+	TEMPLATE=newsite-server.txt
+	export PORT
+fi
+
+read -p "Enter name of folder (/var/www/) " FNAME
+
+if [ -z $FNAME ]; then 
+	FNAME=$NAME
+fi
+
+echo $FNAME
+
 echo "Creating site..."
 export NAME 
 export NOTFOUND
+export FNAME
 
-envsubst '$NAME $NOTFOUND' < ~/bin/varfiles/newsite-default.txt | sudo tee $FILE > /dev/null
+envsubst '$NAME $NOTFOUND $PORT $FNAME' < ~/bin/varfiles/$TEMPLATE | sudo tee $FILE > /dev/null
 
 sudo ln -s $FILE /etc/nginx/sites-enabled/
-sudo mkdir /var/www/$NAME
-sudo chown $USER /var/www/$NAME
+sudo mkdir /var/www/$FNAME
+sudo chown $USER /var/www/$FNAME
 
 read -p "Enter git hub repo--git@github.com:$USER/[ENTERHERE].git [press enter to skip]" repo
 
-if [ -z $repo ]; then
-	sudo cp ~/bin/varfiles/newsite-index.html /var/www/$NAME/index.html
+if [ -z $repo ] && [ $FNAME == $NAME ]; then
+	sudo cp ~/bin/varfiles/newsite-index.html /var/www/$FNAME/index.html
 else
 	read -p "Enter branch (press enter for default): " branch
 	
@@ -81,4 +99,5 @@ if [ $? -eq 1 ]; then
 	sudo service nginx reload
 fi
 
-echo "Site $NAME created!"
+echo "Site $NAME created"
+echo $FILE

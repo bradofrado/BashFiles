@@ -1,7 +1,7 @@
 server {
   listen 80;
   server_name $NAME;
-  root /var/www/$NAME;
+  root /var/www/$FNAME;
   index index.html;
   default_type "text/html";
   location / {
