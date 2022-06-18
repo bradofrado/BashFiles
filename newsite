@@ -92,6 +92,9 @@ else
 	fi
 fi
 
+#Secure the website
+sudo certbot --nginx -d $NAME
+
 
 promptYesNo "Do you want to restart the server? [y/n]: "
 
